@@ -10,3 +10,63 @@
 @import "./css/styles/style.css";
 @import "./css/colors/scheme-01.css";
 @import "./css/styles/coloring.css";
+
+.hot-collections-carousel {
+  padding: 0 48px;
+}
+
+.hot-collections-carousel .slick-prev,
+.hot-collections-carousel .slick-next {
+  width: 40px;
+  height: 40px;
+  z-index: 2;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 8px 20px rgba(24, 20, 51, 0.18);
+}
+
+.hot-collections-carousel .slick-prev {
+  left: 0;
+}
+
+.hot-collections-carousel .slick-next {
+  right: 0;
+}
+
+.hot-collections-carousel .slick-prev::before,
+.hot-collections-carousel .slick-next::before {
+  color: #7c5ce3;
+  font-size: 28px;
+  line-height: 1;
+  opacity: 1;
+}
+
+.hot-collections-carousel .slick-prev:hover,
+.hot-collections-carousel .slick-next:hover {
+  background: #f1edff;
+}
+
+.hot-collections-carousel .slick-disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+@media (max-width: 576px) {
+  .hot-collections-carousel {
+    padding: 0 28px;
+  }
+
+  .hot-collections-carousel .slick-prev,
+  .hot-collections-carousel .slick-next {
+    width: 34px;
+    height: 34px;
+  }
+
+  .hot-collections-carousel .slick-prev {
+    left: -4px;
+  }
+
+  .hot-collections-carousel .slick-next {
+    right: -4px;
+  }
+}
