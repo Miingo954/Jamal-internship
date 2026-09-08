@@ -7,18 +7,24 @@ import Skeleton from "../components/UI/Skeleton";
 
 const NEW_ITEMS_URL =
   "https://us-central1-nft-cloud-functions.cloudfunctions.net/newItems";
+const HOT_COLLECTIONS_URL =
+  "https://us-central1-nft-cloud-functions.cloudfunctions.net/hotCollections";
+const TOP_SELLERS_URL =
+  "https://us-central1-nft-cloud-functions.cloudfunctions.net/topSellers";
 
 const Author = () => {
   const { id, type } = useParams();
   const isNewItemAuthor = type === "new" && Boolean(id);
+  const isTopSeller = type === "top" && Boolean(id);
   const [authorItem, setAuthorItem] = useState(null);
-  const [isLoading, setIsLoading] = useState(isNewItemAuthor);
+  const [authorItems, setAuthorItems] = useState(null);
+  const [isLoading, setIsLoading] = useState(isNewItemAuthor || isTopSeller);
   const [error, setError] = useState("");
 
   useEffect(() => {
     window.scrollTo(0, 0);
 
-    if (!isNewItemAuthor) {
+    if (!isNewItemAuthor && !isTopSeller) {
       setIsLoading(false);
       return undefined;
     }
@@ -27,11 +33,40 @@ const Author = () => {
 
     async function loadAuthor() {
       try {
-        const response = await fetch(NEW_ITEMS_URL, { signal: controller.signal });
+        if (isTopSeller) {
+          const responses = await Promise.all([
+            fetch(TOP_SELLERS_URL, { signal: controller.signal }),
+            fetch(NEW_ITEMS_URL, { signal: controller.signal }),
+            fetch(HOT_COLLECTIONS_URL, { signal: controller.signal }),
+          ]);
 
-        if (!response.ok) {
-          throw new Error("Unable to load this creator.");
+          if (responses.some((response) => !response.ok)) {
+            throw new Error("Unable to load this creator.");
+          }
+
+          const [sellers, newItems, collections] = await Promise.all(
+            responses.map((response) => response.json())
+          );
+          const seller = sellers.find((record) => String(record.authorId) === id);
+
+          if (!seller) {
+            throw new Error("That creator was not found.");
+          }
+
+          setAuthorItem(seller);
+          setAuthorItems([
+            ...newItems
+              .filter((record) => String(record.authorId) === id)
+              .map((record) => ({ ...record, itemType: "new" })),
+            ...collections
+              .filter((record) => String(record.authorId) === id)
+              .map((record) => ({ ...record, itemType: "collection" })),
+          ]);
+          return;
         }
+
+        const response = await fetch(NEW_ITEMS_URL, { signal: controller.signal });
+        if (!response.ok) throw new Error("Unable to load this creator.");
 
         const items = await response.json();
         const matchingItem = items.find((item) => String(item.authorId) === id);
@@ -54,7 +89,7 @@ const Author = () => {
 
     loadAuthor();
     return () => controller.abort();
-  }, [id, isNewItemAuthor]);
+  }, [id, isNewItemAuthor, isTopSeller]);
 
   if (isLoading) {
     return (
@@ -74,8 +109,12 @@ const Author = () => {
   }
 
   const profileImage = authorItem?.authorImage || AuthorImage;
-  const displayName = authorItem ? `Creator #${authorItem.authorId}` : "Monica Lucas";
-  const username = authorItem ? `@creator${authorItem.authorId}` : "@monicaaaa";
+  const displayName = authorItem?.authorName || (authorItem ? `Creator #${authorItem.authorId}` : "Monica Lucas");
+  const username = authorItem
+    ? `@${(authorItem.authorName || `creator${authorItem.authorId}`)
+        .toLowerCase()
+        .replace(/\s+/g, "")}`
+    : "@monicaaaa";
   const wallet = authorItem
     ? `NFT creator ID ${authorItem.authorId}`
     : "UDHUHWudhwd78wdt7edb32uidbwyuidhg7wUHIFUHWewiqdj87dy7";
@@ -122,7 +161,7 @@ const Author = () => {
 
               <div className="col-md-12">
                 <div className="de_tab tab_simple">
-                  <AuthorItems item={authorItem} />
+                  <AuthorItems item={authorItem} items={authorItems} />
                 </div>
               </div>
             </div>

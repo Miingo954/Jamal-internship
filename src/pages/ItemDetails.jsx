@@ -163,7 +163,7 @@ const ItemDetails = () => {
                       <h6>Owner</h6>
                       <div className="item_author">
                         <div className="author_list_pp">
-                          <Link to={isNewItem ? `/author/new/${collection.authorId}` : "/author"}>
+                          <Link to={isNewItem ? `/author/new/${collection.authorId}` : `/author/top/${collection.authorId}`}>
                             <img
                               className="lazy"
                               src={collection.authorImage}
@@ -173,7 +173,7 @@ const ItemDetails = () => {
                           </Link>
                         </div>
                         <div className="author_list_info">
-                          <Link to={isNewItem ? `/author/new/${collection.authorId}` : "/author"}>
+                          <Link to={isNewItem ? `/author/new/${collection.authorId}` : `/author/top/${collection.authorId}`}>
                             Creator #{collection.authorId}
                           </Link>
                         </div>
@@ -186,7 +186,7 @@ const ItemDetails = () => {
                       <h6>Creator</h6>
                       <div className="item_author">
                         <div className="author_list_pp">
-                          <Link to={isNewItem ? `/author/new/${collection.authorId}` : "/author"}>
+                          <Link to={isNewItem ? `/author/new/${collection.authorId}` : `/author/top/${collection.authorId}`}>
                             <img
                               className="lazy"
                               src={collection.authorImage}
@@ -196,7 +196,7 @@ const ItemDetails = () => {
                           </Link>
                         </div>
                         <div className="author_list_info">
-                          <Link to={isNewItem ? `/author/new/${collection.authorId}` : "/author"}>
+                          <Link to={isNewItem ? `/author/new/${collection.authorId}` : `/author/top/${collection.authorId}`}>
                             Creator #{collection.authorId}
                           </Link>
                         </div>

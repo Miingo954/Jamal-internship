@@ -12,9 +12,11 @@ const fallbackItem = {
   nftImage,
 };
 
-const AuthorItems = ({ item }) => {
-  const items = item
-    ? [item]
+const AuthorItems = ({ item, items: profileItems }) => {
+  const items = profileItems
+    ? profileItems
+    : item
+    ? [{ ...item, itemType: "new" }]
     : new Array(8).fill(null).map((_, index) => ({
         ...fallbackItem,
         id: `fallback-${index}`,
@@ -24,9 +26,15 @@ const AuthorItems = ({ item }) => {
     <div className="de_tab_content">
       <div className="tab-1">
         <div className="row">
+          {items.length === 0 && (
+            <div className="col-12 text-center">
+              <p>This creator has no listed work right now.</p>
+            </div>
+          )}
+
           {items.map((authorItem) => {
-            const itemRoute = item
-              ? `/item-details/new/${authorItem.id}`
+            const itemRoute = authorItem.itemType
+              ? `/item-details/${authorItem.itemType}/${authorItem.id}`
               : "/item-details";
 
             return (
@@ -63,9 +71,11 @@ const AuthorItems = ({ item }) => {
                     <Link to={itemRoute}>
                       <h4>{authorItem.title}</h4>
                     </Link>
-                    <div className="nft__item_price">
-                      {Number(authorItem.price).toFixed(2)} ETH
-                    </div>
+                    {authorItem.price != null && (
+                      <div className="nft__item_price">
+                        {Number(authorItem.price).toFixed(2)} ETH
+                      </div>
+                    )}
                     <div className="nft__item_like">
                       <i className="fa fa-heart"></i>
                       <span>{authorItem.likes}</span>
