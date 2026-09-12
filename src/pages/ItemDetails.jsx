@@ -1,33 +1,34 @@
 import React, { useEffect, useState } from "react";
-import EthImage from "../images/ethereum.svg";
 import { Link, useParams } from "react-router-dom";
+import EthImage from "../images/ethereum.svg";
 import AuthorImage from "../images/author_thumbnail.jpg";
 import nftImage from "../images/nftImage.jpg";
 import Skeleton from "../components/UI/Skeleton";
 
-const HOT_COLLECTIONS_URL =
-  "https://us-central1-nft-cloud-functions.cloudfunctions.net/hotCollections";
-const NEW_ITEMS_URL =
-  "https://us-central1-nft-cloud-functions.cloudfunctions.net/newItems";
-const EXPLORE_URL =
-  "https://us-central1-nft-cloud-functions.cloudfunctions.net/explore";
-const AUTHORS_URL =
-  "https://us-central1-nft-cloud-functions.cloudfunctions.net/authors";
+const ITEM_DETAILS_URL =
+  "https://us-central1-nft-cloud-functions.cloudfunctions.net/itemDetails";
 
-const fallbackCollection = {
+const fallbackItem = {
   title: "Rainbow Style #194",
+  description: "Select an NFT to see its complete details.",
   nftImage,
-  authorImage: AuthorImage,
   nftId: "—",
-  authorId: "Monica Lucas",
-  code: 194,
+  ownerId: "",
+  ownerName: "Monica Lucas",
+  ownerImage: AuthorImage,
+  creatorId: "",
+  creatorName: "Monica Lucas",
+  creatorImage: AuthorImage,
+  price: 0,
+  likes: 0,
+  views: 0,
 };
 
 const ItemDetailsSkeleton = () => (
-  <div id="wrapper" aria-label="Loading NFT collection" aria-busy="true">
+  <div id="wrapper" aria-label="Loading NFT details" aria-busy="true">
     <div className="no-bottom no-top" id="content">
       <div id="top"></div>
-      <section aria-label="Loading collection details" className="mt90 sm-mt-0">
+      <section aria-label="Loading NFT details" className="mt90 sm-mt-0">
         <div className="container">
           <div className="row">
             <div className="col-md-6 text-center">
@@ -56,12 +57,37 @@ const ItemDetailsSkeleton = () => (
   </div>
 );
 
+const PersonDetails = ({ label, id, image, name }) => {
+  const profilePath = id ? `/author/${id}` : null;
+
+  return (
+    <div className="mr40">
+      <h6>{label}</h6>
+      <div className="item_author">
+        <div className="author_list_pp">
+          {profilePath ? (
+            <Link to={profilePath} aria-label={`View ${name}'s profile`}>
+              <img className="lazy" src={image} alt={name} loading="lazy" />
+              <i className="fa fa-check"></i>
+            </Link>
+          ) : (
+            <>
+              <img className="lazy" src={image} alt={name} loading="lazy" />
+              <i className="fa fa-check"></i>
+            </>
+          )}
+        </div>
+        <div className="author_list_info">
+          {profilePath ? <Link to={profilePath}>{name}</Link> : name}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ItemDetails = () => {
-  const { authorId, id, type } = useParams();
-  const isNewItem = type === "new";
-  const isExploreItem = type === "explore";
-  const isAuthorItem = Boolean(authorId);
-  const [collection, setCollection] = useState(id ? null : fallbackCollection);
+  const { id } = useParams();
+  const [item, setItem] = useState(id ? null : fallbackItem);
   const [isLoading, setIsLoading] = useState(Boolean(id));
   const [error, setError] = useState("");
 
@@ -69,89 +95,53 @@ const ItemDetails = () => {
     window.scrollTo(0, 0);
 
     if (!id) {
-      setCollection(fallbackCollection);
+      setItem(fallbackItem);
       setIsLoading(false);
-      return;
+      return undefined;
     }
 
-    let isCurrent = true;
+    const controller = new AbortController();
 
     async function loadItem() {
       setIsLoading(true);
-      setCollection(null);
+      setItem(null);
       setError("");
 
       try {
-        const endpoint = isAuthorItem
-          ? `${AUTHORS_URL}?author=${authorId}`
-          : isExploreItem
-            ? EXPLORE_URL
-            : isNewItem
-              ? NEW_ITEMS_URL
-              : HOT_COLLECTIONS_URL;
-        const response = await fetch(endpoint, { cache: "no-store" });
+        const response = await fetch(
+          `${ITEM_DETAILS_URL}?nftId=${encodeURIComponent(id)}`,
+          { signal: controller.signal, cache: "no-store" },
+        );
 
-        if (!response.ok) {
-          throw new Error(
-            `Unable to load this ${isNewItem ? "item" : "collection"}.`,
-          );
-        }
+        if (!response.ok) throw new Error("Unable to load this NFT.");
 
         const data = await response.json();
-        if (
-          isAuthorItem &&
-          (!data?.authorId || String(data.authorId) !== String(authorId))
-        ) {
-          throw new Error("That creator was not found.");
+        if (!data?.nftId || String(data.nftId) !== String(id)) {
+          throw new Error("That NFT was not found.");
         }
 
-        const matchingItem = isAuthorItem
-          ? data.nftCollection
-              ?.filter((apiItem) => String(apiItem.id) === id)
-              .map((apiItem) => ({
-                ...apiItem,
-                authorId: data.authorId,
-                authorImage: data.authorImage,
-                authorName: data.authorName,
-              }))[0]
-          : data.find((apiItem) => String(apiItem.id) === id);
-
-        if (!matchingItem) {
-          throw new Error(
-            `That ${isNewItem ? "item" : "collection"} was not found.`,
-          );
-        }
-
-        if (isCurrent) {
-          setCollection(matchingItem);
-        }
+        setItem(data);
       } catch (requestError) {
-        if (isCurrent) {
+        if (requestError.name !== "AbortError") {
           setError(requestError.message);
         }
       } finally {
-        if (isCurrent) {
-          setIsLoading(false);
-        }
+        if (!controller.signal.aborted) setIsLoading(false);
       }
     }
 
     loadItem();
+    return () => controller.abort();
+  }, [id]);
 
-    return () => {
-      isCurrent = false;
-    };
-  }, [authorId, id, isAuthorItem, isExploreItem, isNewItem]);
+  if (isLoading) return <ItemDetailsSkeleton />;
 
-  if (isLoading) {
-    return <ItemDetailsSkeleton />;
-  }
-
-  if (error || !collection) {
+  if (error || !item) {
     return (
       <main className="container pt-5">
-        <p>{error || "That collection could not be found."}</p>
-        <Link to="/">Back to home</Link>
+        <h1>NFT unavailable</h1>
+        <p>{error || "That NFT could not be found."}</p>
+        <Link to="/explore">Back to explore</Link>
       </main>
     );
   }
@@ -160,102 +150,62 @@ const ItemDetails = () => {
     <div id="wrapper">
       <div className="no-bottom no-top" id="content">
         <div id="top"></div>
-        <section aria-label="section" className="mt90 sm-mt-0">
+        <section
+          aria-label={`${item.title} NFT details`}
+          className="mt90 sm-mt-0"
+        >
           <div className="container">
             <div className="row">
               <div className="col-md-6 text-center">
                 <img
-                  src={collection.nftImage}
+                  src={item.nftImage}
                   className="img-fluid img-rounded mb-sm-30 nft-image"
-                  alt={`${collection.title} NFT collection`}
+                  alt={`${item.title} NFT`}
                   loading="lazy"
                 />
               </div>
+
               <div className="col-md-6">
                 <div className="item_info">
-                  <h2>{collection.title}</h2>
+                  <h2>{item.title}</h2>
 
                   <div className="item_info_counts">
                     <div className="item_info_views">
                       <i className="fa fa-eye"></i>
-                      NFT #{collection.nftId}
+                      {item.views} views
                     </div>
                     <div className="item_info_like">
                       <i className="fa fa-heart"></i>
-                      {isNewItem || isExploreItem || isAuthorItem
-                        ? `${collection.likes} likes`
-                        : `ERC-${collection.code}`}
+                      {item.likes} likes
                     </div>
                   </div>
-                  <p>
-                    Explore {collection.title}. This page is populated from the
-                    selected{" "}
-                    {isAuthorItem
-                      ? "Author collection"
-                      : isExploreItem
-                        ? "Explore"
-                        : isNewItem
-                          ? "New Items"
-                          : "Hot Collections"}{" "}
-                    API record.
+
+                  <p>{item.description}</p>
+                  <p className="mb-4">
+                    NFT #{item.nftId} · Collection #{item.tag}
                   </p>
-                  <div className="d-flex flex-row">
-                    <div className="mr40">
-                      <h6>Owner</h6>
-                      <div className="item_author">
-                        <div className="author_list_pp">
-                          <Link to={`/author/${collection.authorId}`}>
-                            <img
-                              className="lazy"
-                              src={collection.authorImage}
-                              alt={`${collection.title} creator`}
-                              loading="lazy"
-                            />
-                            <i className="fa fa-check"></i>
-                          </Link>
-                        </div>
-                        <div className="author_list_info">
-                          <Link to={`/author/${collection.authorId}`}>
-                            {collection.authorName ||
-                              `Creator #${collection.authorId}`}
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                    <div></div>
+
+                  <div className="d-flex flex-row flex-wrap">
+                    <PersonDetails
+                      label="Owner"
+                      id={item.ownerId}
+                      image={item.ownerImage}
+                      name={item.ownerName}
+                    />
+                    <PersonDetails
+                      label="Creator"
+                      id={item.creatorId}
+                      image={item.creatorImage}
+                      name={item.creatorName}
+                    />
                   </div>
+
                   <div className="de_tab tab_simple">
-                    <div className="de_tab_content">
-                      <h6>Creator</h6>
-                      <div className="item_author">
-                        <div className="author_list_pp">
-                          <Link to={`/author/${collection.authorId}`}>
-                            <img
-                              className="lazy"
-                              src={collection.authorImage}
-                              alt={`${collection.title} creator`}
-                              loading="lazy"
-                            />
-                            <i className="fa fa-check"></i>
-                          </Link>
-                        </div>
-                        <div className="author_list_info">
-                          <Link to={`/author/${collection.authorId}`}>
-                            {collection.authorName ||
-                              `Creator #${collection.authorId}`}
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
                     <div className="spacer-40"></div>
                     <h6>Price</h6>
                     <div className="nft-item-price">
                       <img src={EthImage} alt="" />
-                      <span>
-                        {isNewItem || isExploreItem || isAuthorItem
-                          ? `${Number(collection.price).toFixed(2)} ETH`
-                          : `Collection #${collection.code}`}
-                      </span>
+                      <span>{Number(item.price).toFixed(2)} ETH</span>
                     </div>
                   </div>
                 </div>

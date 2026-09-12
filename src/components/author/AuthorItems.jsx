@@ -15,7 +15,7 @@ const AuthorItems = ({ author }) => (
           <div className="col-lg-3 col-md-6 col-sm-6 col-xs-12" key={item.id}>
             <NftItem
               item={item}
-              itemPath={`/item-details/author/${author.authorId}/${item.id}`}
+              itemPath={`/item-details/${item.nftId}`}
               showAuthor={false}
             />
           </div>
