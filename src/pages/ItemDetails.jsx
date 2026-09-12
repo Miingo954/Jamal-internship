@@ -9,6 +9,10 @@ const HOT_COLLECTIONS_URL =
   "https://us-central1-nft-cloud-functions.cloudfunctions.net/hotCollections";
 const NEW_ITEMS_URL =
   "https://us-central1-nft-cloud-functions.cloudfunctions.net/newItems";
+const EXPLORE_URL =
+  "https://us-central1-nft-cloud-functions.cloudfunctions.net/explore";
+const AUTHORS_URL =
+  "https://us-central1-nft-cloud-functions.cloudfunctions.net/authors";
 
 const fallbackCollection = {
   title: "Rainbow Style #194",
@@ -53,8 +57,10 @@ const ItemDetailsSkeleton = () => (
 );
 
 const ItemDetails = () => {
-  const { id, type } = useParams();
+  const { authorId, id, type } = useParams();
   const isNewItem = type === "new";
+  const isExploreItem = type === "explore";
+  const isAuthorItem = Boolean(authorId);
   const [collection, setCollection] = useState(id ? null : fallbackCollection);
   const [isLoading, setIsLoading] = useState(Boolean(id));
   const [error, setError] = useState("");
@@ -76,20 +82,44 @@ const ItemDetails = () => {
       setError("");
 
       try {
-        const endpoint = isNewItem ? NEW_ITEMS_URL : HOT_COLLECTIONS_URL;
-        const response = await fetch(endpoint);
+        const endpoint = isAuthorItem
+          ? `${AUTHORS_URL}?author=${authorId}`
+          : isExploreItem
+            ? EXPLORE_URL
+            : isNewItem
+              ? NEW_ITEMS_URL
+              : HOT_COLLECTIONS_URL;
+        const response = await fetch(endpoint, { cache: "no-store" });
 
         if (!response.ok) {
-          throw new Error(`Unable to load this ${isNewItem ? "item" : "collection"}.`);
+          throw new Error(
+            `Unable to load this ${isNewItem ? "item" : "collection"}.`,
+          );
         }
 
-        const records = await response.json();
-        const matchingItem = records.find(
-          (apiItem) => String(apiItem.id) === id
-        );
+        const data = await response.json();
+        if (
+          isAuthorItem &&
+          (!data?.authorId || String(data.authorId) !== String(authorId))
+        ) {
+          throw new Error("That creator was not found.");
+        }
+
+        const matchingItem = isAuthorItem
+          ? data.nftCollection
+              ?.filter((apiItem) => String(apiItem.id) === id)
+              .map((apiItem) => ({
+                ...apiItem,
+                authorId: data.authorId,
+                authorImage: data.authorImage,
+                authorName: data.authorName,
+              }))[0]
+          : data.find((apiItem) => String(apiItem.id) === id);
 
         if (!matchingItem) {
-          throw new Error(`That ${isNewItem ? "item" : "collection"} was not found.`);
+          throw new Error(
+            `That ${isNewItem ? "item" : "collection"} was not found.`,
+          );
         }
 
         if (isCurrent) {
@@ -111,7 +141,7 @@ const ItemDetails = () => {
     return () => {
       isCurrent = false;
     };
-  }, [id, isNewItem]);
+  }, [authorId, id, isAuthorItem, isExploreItem, isNewItem]);
 
   if (isLoading) {
     return <ItemDetailsSkeleton />;
@@ -138,6 +168,7 @@ const ItemDetails = () => {
                   src={collection.nftImage}
                   className="img-fluid img-rounded mb-sm-30 nft-image"
                   alt={`${collection.title} NFT collection`}
+                  loading="lazy"
                 />
               </div>
               <div className="col-md-6">
@@ -151,30 +182,42 @@ const ItemDetails = () => {
                     </div>
                     <div className="item_info_like">
                       <i className="fa fa-heart"></i>
-                      {isNewItem ? `${collection.likes} likes` : `ERC-${collection.code}`}
+                      {isNewItem || isExploreItem || isAuthorItem
+                        ? `${collection.likes} likes`
+                        : `ERC-${collection.code}`}
                     </div>
                   </div>
                   <p>
                     Explore {collection.title}. This page is populated from the
-                    selected {isNewItem ? "New Items" : "Hot Collections"} API record.
+                    selected{" "}
+                    {isAuthorItem
+                      ? "Author collection"
+                      : isExploreItem
+                        ? "Explore"
+                        : isNewItem
+                          ? "New Items"
+                          : "Hot Collections"}{" "}
+                    API record.
                   </p>
                   <div className="d-flex flex-row">
                     <div className="mr40">
                       <h6>Owner</h6>
                       <div className="item_author">
                         <div className="author_list_pp">
-                          <Link to={isNewItem ? `/author/new/${collection.authorId}` : `/author/top/${collection.authorId}`}>
+                          <Link to={`/author/${collection.authorId}`}>
                             <img
                               className="lazy"
                               src={collection.authorImage}
                               alt={`${collection.title} creator`}
+                              loading="lazy"
                             />
                             <i className="fa fa-check"></i>
                           </Link>
                         </div>
                         <div className="author_list_info">
-                          <Link to={isNewItem ? `/author/new/${collection.authorId}` : `/author/top/${collection.authorId}`}>
-                            Creator #{collection.authorId}
+                          <Link to={`/author/${collection.authorId}`}>
+                            {collection.authorName ||
+                              `Creator #${collection.authorId}`}
                           </Link>
                         </div>
                       </div>
@@ -186,18 +229,20 @@ const ItemDetails = () => {
                       <h6>Creator</h6>
                       <div className="item_author">
                         <div className="author_list_pp">
-                          <Link to={isNewItem ? `/author/new/${collection.authorId}` : `/author/top/${collection.authorId}`}>
+                          <Link to={`/author/${collection.authorId}`}>
                             <img
                               className="lazy"
                               src={collection.authorImage}
                               alt={`${collection.title} creator`}
+                              loading="lazy"
                             />
                             <i className="fa fa-check"></i>
                           </Link>
                         </div>
                         <div className="author_list_info">
-                          <Link to={isNewItem ? `/author/new/${collection.authorId}` : `/author/top/${collection.authorId}`}>
-                            Creator #{collection.authorId}
+                          <Link to={`/author/${collection.authorId}`}>
+                            {collection.authorName ||
+                              `Creator #${collection.authorId}`}
                           </Link>
                         </div>
                       </div>
@@ -207,7 +252,7 @@ const ItemDetails = () => {
                     <div className="nft-item-price">
                       <img src={EthImage} alt="" />
                       <span>
-                        {isNewItem
+                        {isNewItem || isExploreItem || isAuthorItem
                           ? `${Number(collection.price).toFixed(2)} ETH`
                           : `Collection #${collection.code}`}
                       </span>

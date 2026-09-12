@@ -27,7 +27,9 @@ const TopSellers = () => {
       } catch (requestError) {
         if (requestError.name !== "AbortError") {
           console.error("Failed to load top sellers:", requestError);
-          setError("Top sellers are unavailable right now. Please try again soon.");
+          setError(
+            "Top sellers are unavailable right now. Please try again soon.",
+          );
         }
       } finally {
         if (!controller.signal.aborted) {
@@ -59,9 +61,17 @@ const TopSellers = () => {
                       <Skeleton width="50px" height="50px" borderRadius="50%" />
                     </div>
                     <div className="author_list_info">
-                      <Skeleton width="120px" height="16px" borderRadius="4px" />
+                      <Skeleton
+                        width="120px"
+                        height="16px"
+                        borderRadius="4px"
+                      />
                       <div className="mt-2">
-                        <Skeleton width="65px" height="14px" borderRadius="4px" />
+                        <Skeleton
+                          width="65px"
+                          height="14px"
+                          borderRadius="4px"
+                        />
                       </div>
                     </div>
                   </li>
@@ -73,26 +83,29 @@ const TopSellers = () => {
                 </li>
               )}
 
-              {!isLoading && !error && sellers.map((seller) => (
-                <li key={seller.id}>
-                  <div className="author_list_pp">
-                    <Link to={`/author/top/${seller.authorId}`}>
-                      <img
-                        className="lazy pp-author"
-                        src={seller.authorImage}
-                        alt={seller.authorName}
-                      />
-                      <i className="fa fa-check"></i>
-                    </Link>
-                  </div>
-                  <div className="author_list_info">
-                    <Link to={`/author/top/${seller.authorId}`}>
-                      {seller.authorName}
-                    </Link>
-                    <span>{Number(seller.price).toFixed(2)} ETH</span>
-                  </div>
-                </li>
-              ))}
+              {!isLoading &&
+                !error &&
+                sellers.map((seller) => (
+                  <li key={seller.id}>
+                    <div className="author_list_pp">
+                      <Link to={`/author/${seller.authorId}`}>
+                        <img
+                          className="lazy pp-author"
+                          src={seller.authorImage}
+                          alt={seller.authorName}
+                          loading="lazy"
+                        />
+                        <i className="fa fa-check"></i>
+                      </Link>
+                    </div>
+                    <div className="author_list_info">
+                      <Link to={`/author/${seller.authorId}`}>
+                        {seller.authorName}
+                      </Link>
+                      <span>{Number(seller.price).toFixed(2)} ETH</span>
+                    </div>
+                  </li>
+                ))}
             </ol>
           </div>
         </div>

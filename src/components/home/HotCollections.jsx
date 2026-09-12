@@ -5,7 +5,6 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
-
 const HOT_COLLECTIONS_URL =
   "https://us-central1-nft-cloud-functions.cloudfunctions.net/hotCollections";
 
@@ -27,7 +26,9 @@ const HotCollections = () => {
         setCollections(data.slice(0, 8));
       } catch (requestError) {
         console.error("Failed to load hot collections:", requestError);
-        setError("Hot collections are unavailable right now. Please try again soon.");
+        setError(
+          "Hot collections are unavailable right now. Please try again soon.",
+        );
       } finally {
         setIsLoading(false);
       }
@@ -95,11 +96,12 @@ const HotCollections = () => {
                         </Link>
                       </div>
                       <div className="nft_coll_pp">
-                        <Link to={`/author/top/${collection.authorId}`}>
+                        <Link to={`/author/${collection.authorId}`}>
                           <img
                             className="lazy pp-coll"
                             src={collection.authorImage}
                             alt={`${collection.title} creator`}
+                            loading="lazy"
                           />
                         </Link>
                         <i className="fa fa-check"></i>
