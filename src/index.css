@@ -70,3 +70,75 @@
     right: -4px;
   }
 }
+
+.explore-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.explore-item {
+  display: block;
+}
+
+.explore-toolbar label {
+  margin: 0;
+  color: #606060;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.explore-toolbar select {
+  min-width: 210px;
+}
+
+.explore-message {
+  min-height: 180px;
+  padding-top: 48px;
+}
+
+#loadmore {
+  border: 0;
+  cursor: pointer;
+}
+
+@media (max-width: 576px) {
+  .explore-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .explore-toolbar select {
+    width: 100%;
+  }
+}
+
+.author-profile-skeleton {
+  padding-top: 56px;
+  padding-bottom: 80px;
+}
+
+.author-error {
+  min-height: 70vh;
+  padding-top: 180px;
+  text-align: center;
+}
+
+.author-error h1 {
+  margin-bottom: 16px;
+}
+
+.author-error p {
+  margin-bottom: 28px;
+}
+
+.profile_follow .btn-main {
+  border: 0;
+  cursor: pointer;
+}
+
+.profile_follow .btn-main[aria-pressed="true"] {
+  background: #2f2f3a;
+}
