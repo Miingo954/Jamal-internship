@@ -3,7 +3,11 @@ import { Link } from "react-router-dom";
 import Countdown from "./Countdown";
 
 const NftItem = ({ item, source = "new", itemPath, showAuthor = true }) => {
-  const detailsPath = itemPath || `/item-details/${source}/${item.id}`;
+  const detailsPath =
+    itemPath ||
+    (item.nftId
+      ? `/item-details/${item.nftId}`
+      : `/item-details/${source}/${item.id}`);
 
   return (
     <div className="nft__item">
