@@ -11,12 +11,13 @@ const AuthorItems = ({ author }) => (
           </div>
         )}
 
-        {author.nftCollection.map((item) => (
+        {author.nftCollection.map((item, index) => (
           <div className="col-lg-3 col-md-6 col-sm-6 col-xs-12" key={item.id}>
             <NftItem
               item={item}
               itemPath={`/item-details/${item.nftId}`}
               showAuthor={false}
+              animationDelay={(index % 4) * 75}
             />
           </div>
         ))}

@@ -78,7 +78,7 @@ const ExploreItems = () => {
 
   return (
     <>
-      <div className="col-12 explore-toolbar">
+      <div className="col-12 explore-toolbar" data-aos="fade-down">
         <label htmlFor="filter-items">Sort marketplace</label>
         <select
           id="filter-items"
@@ -104,12 +104,16 @@ const ExploreItems = () => {
 
       {!isLoading &&
         !error &&
-        visibleItems.map((item) => (
+        visibleItems.map((item, index) => (
           <div
             key={item.id}
             className="d-item explore-item col-lg-3 col-md-6 col-sm-6 col-xs-12"
           >
-            <NftItem item={item} source="explore" />
+            <NftItem
+              item={item}
+              source="explore"
+              animationDelay={(index % 4) * 75}
+            />
           </div>
         ))}
 

@@ -2,7 +2,13 @@ import React from "react";
 import { Link } from "react-router-dom";
 import Countdown from "./Countdown";
 
-const NftItem = ({ item, source = "new", itemPath, showAuthor = true }) => {
+const NftItem = ({
+  item,
+  source = "new",
+  itemPath,
+  showAuthor = true,
+  animationDelay = 0,
+}) => {
   const detailsPath =
     itemPath ||
     (item.nftId
@@ -10,7 +16,12 @@ const NftItem = ({ item, source = "new", itemPath, showAuthor = true }) => {
       : `/item-details/${source}/${item.id}`);
 
   return (
-    <div className="nft__item">
+    <div
+      className="nft__item"
+      data-aos="fade-up"
+      data-aos-delay={animationDelay}
+      data-aos-duration="650"
+    >
       {showAuthor && (
         <div className="author_list_pp">
           <Link

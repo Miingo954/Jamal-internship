@@ -147,7 +147,7 @@ const Author = () => {
               <div className="col-md-12">
                 <div className="d_profile de-flex">
                   <div className="de-flex-col">
-                    <div className="profile_avatar">
+                    <div className="profile_avatar" data-aos="fade-right">
                       <img
                         src={author.authorImage}
                         alt={author.authorName}
@@ -176,7 +176,7 @@ const Author = () => {
                     </div>
                   </div>
 
-                  <div className="profile_follow de-flex">
+                  <div className="profile_follow de-flex" data-aos="fade-left">
                     <div className="de-flex-col">
                       <div className="profile_follower">
                         {author.followers + (isFollowing ? 1 : 0)} followers
@@ -195,7 +195,7 @@ const Author = () => {
               </div>
 
               <div className="col-md-12">
-                <div className="de_tab tab_simple">
+                <div className="de_tab tab_simple" data-aos="fade-up">
                   <AuthorItems author={author} />
                 </div>
               </div>

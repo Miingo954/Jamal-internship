@@ -64,7 +64,7 @@ const NewItems = () => {
       <div className="container">
         <div className="row">
           <div className="col-lg-12">
-            <div className="text-center">
+            <div className="text-center" data-aos="fade-up">
               <h2>New Items</h2>
               <div className="small-border bg-color-2"></div>
             </div>
@@ -91,9 +91,13 @@ const NewItems = () => {
                 {...settings}
                 className="hot-collections-carousel new-items-carousel"
               >
-                {items.map((item) => (
+                {items.map((item, index) => (
                   <div key={item.id} className="px-2">
-                    <NftItem item={item} source="new" />
+                    <NftItem
+                      item={item}
+                      source="new"
+                      animationDelay={(index % 4) * 75}
+                    />
                   </div>
                 ))}
               </Slider>
